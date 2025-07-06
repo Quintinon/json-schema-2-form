@@ -43,18 +43,37 @@
 
     function generateForm(schema) {
       dynamicForm.innerHTML = '';
+
       for (const [key, prop] of Object.entries(schema.properties || {})) {
+        const wrapper = document.createElement('div');
+
         const label = document.createElement('label');
         label.textContent = key;
-        label.className = 'block font-medium';
+        label.className = 'block font-medium mb-1';
+        wrapper.appendChild(label);
 
-        const input = document.createElement('input');
-        input.name = key;
-        input.className = 'w-full p-2 border border-gray-300 rounded';
-        input.type = prop.type === 'number' ? 'number' : 'text';
+        let input;
 
-        dynamicForm.appendChild(label);
-        dynamicForm.appendChild(input);
+        if (prop.enum) {
+          input = document.createElement('select');
+          input.className = 'w-full p-2 border border-gray-300 rounded';
+          input.name = key;
+
+          prop.enum.forEach(opt => {
+            const option = document.createElement('option');
+            option.value = opt;
+            option.textContent = opt;
+            input.appendChild(option);
+          });
+        } else {
+          input = document.createElement('input');
+          input.name = key;
+          input.className = 'w-full p-2 border border-gray-300 rounded';
+          input.type = prop.type === 'number' ? 'number' : 'text';
+        }
+
+        wrapper.appendChild(input);
+        dynamicForm.appendChild(wrapper);
       }
 
       dynamicForm.addEventListener('input', () => {
