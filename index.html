@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JSON Schema Form Filler</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/ajv@8/dist/ajv7.min.js"></script>
+</head>
+<body class="bg-gray-100 text-gray-900">
+  <div class="container mx-auto p-6">
+    <h1 class="text-2xl font-bold mb-4">JSON Schema Form Filler</h1>
+
+    <!-- Schema Input -->
+    <section class="mb-6">
+      <h2 class="text-lg font-semibold mb-2">Step 1: Paste JSON Schema</h2>
+      <textarea id="schemaInput" rows="10" class="w-full p-2 border border-gray-300 rounded" placeholder="Paste your JSON Schema here..."></textarea>
+      <div class="mt-2">
+        <button id="loadSchema" class="bg-blue-500 text-white px-4 py-2 rounded">Load Schema</button>
+      </div>
+    </section>
+
+    <!-- Dynamic Form -->
+    <section class="mb-6">
+      <h2 class="text-lg font-semibold mb-2">Step 2: Fill Form</h2>
+      <form id="dynamicForm" class="space-y-4"></form>
+    </section>
+
+    <!-- JSON Output -->
+    <section>
+      <h2 class="text-lg font-semibold mb-2">Step 3: Generated JSON</h2>
+      <pre id="jsonOutput" class="bg-white p-4 border border-gray-300 rounded overflow-auto"></pre>
+      <button id="copyJson" class="mt-2 bg-green-500 text-white px-4 py-2 rounded">Copy JSON</button>
+    </section>
+  </div>
+
+  <script>
+    const schemaInput = document.getElementById('schemaInput');
+    const loadSchemaBtn = document.getElementById('loadSchema');
+    const dynamicForm = document.getElementById('dynamicForm');
+    const jsonOutput = document.getElementById('jsonOutput');
+    const copyJsonBtn = document.getElementById('copyJson');
+
+    function generateForm(schema) {
+      dynamicForm.innerHTML = '';
+      for (const [key, prop] of Object.entries(schema.properties || {})) {
+        const label = document.createElement('label');
+        label.textContent = key;
+        label.className = 'block font-medium';
+
+        const input = document.createElement('input');
+        input.name = key;
+        input.className = 'w-full p-2 border border-gray-300 rounded';
+        input.type = prop.type === 'number' ? 'number' : 'text';
+
+        dynamicForm.appendChild(label);
+        dynamicForm.appendChild(input);
+      }
+
+      dynamicForm.addEventListener('input', () => {
+        const data = {};
+        const formData = new FormData(dynamicForm);
+        for (const [key, value] of formData.entries()) {
+          const propType = schema.properties[key].type;
+          data[key] = propType === 'number' ? Number(value) : value;
+        }
+        jsonOutput.textContent = JSON.stringify(data, null, 2);
+      });
+    }
+
+    loadSchemaBtn.addEventListener('click', () => {
+      try {
+        const schema = JSON.parse(schemaInput.value);
+        generateForm(schema);
+      } catch (err) {
+        alert('Invalid JSON Schema');
+      }
+    });
+
+    copyJsonBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(jsonOutput.textContent).then(() => {
+        alert('Copied to clipboard!');
+      });
+    });
+  </script>
+</body>
+</html>
